@@ -4,13 +4,33 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 const cors = require("cors")
 const userRoute = require("./routes/userRoute")
+const branchRoute = require("./routes/branchRoute")
 const morgan = require("morgan")
 
 app.use(cors())
 app.use(express.json());
 app.use(morgan("dev"))
 
+
+
+
+
+
+
+
+
+
+app.use("/api/branch", branchRoute)
 app.use("/api/user", userRoute)
+
+
+
+
+
+
+
+
+
 
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`)
