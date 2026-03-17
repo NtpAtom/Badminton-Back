@@ -1,0 +1,3 @@
+{
+    "selectUser": "SELECT * FROM  users"
+}
