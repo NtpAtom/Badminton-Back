@@ -9,6 +9,8 @@ const morgan = require("morgan")
 const userRoute = require("./routes/userRoute")
 const branchRoute = require("./routes/branchRoute")
 const courtRoute = require("./routes/courtRoute")
+const bookingRoute = require("./routes/bookingRoute")
+const bookingStatusHistoryRoute = require("./routes/bookingStatusHistoryRoute")
 
 
 
@@ -21,6 +23,8 @@ app.use(morgan("dev"))
 app.use("/api/branch", branchRoute)
 app.use("/api/user", userRoute)
 app.use("/api/court", courtRoute)
+app.use("/api/booking", bookingRoute)
+app.use("/api/booking-status-history", bookingStatusHistoryRoute)
 
 
 
