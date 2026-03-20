@@ -36,9 +36,14 @@ exports.addBooking = async (
     booking_date,
     start_time,
     end_time,
-    status
+    status,
+    status_id
 ) => {
     const client = await db.connect()
+
+    // 📌 Default Status to 'Pending' (ed5cf29e-f83e-4ab1-9c21-44c56f550c12)
+    const Status = status || 'Pending'
+    const StatusId = status_id || 'ed5cf29e-f83e-4ab1-9c21-44c56f550c12'
 
     try {
         await client.query("BEGIN")
@@ -95,13 +100,13 @@ exports.addBooking = async (
 
 
         const query = booking.addBooking
-        const result = await client.query(query, [user_id, court_id, booking_date, start_time, end_time, calculated_total_price, status])
+        const result = await client.query(query, [user_id, court_id, booking_date, start_time, end_time, calculated_total_price, finalStatus, finalStatusId])
 
         const newBooking = result.rows[0];
 
         // 📝 บันทึกประวัติสถานะการจอง (Booking History)
         const historyQuery = bookingStatusHistory.addBookingStatusHistory
-        await client.query(historyQuery, [newBooking.booking_id, null, status, user_id])
+        await client.query(historyQuery, [newBooking.booking_id, null, Status, user_id, null, StatusId])
 
         await client.query("COMMIT")
 
@@ -118,10 +123,10 @@ exports.addBooking = async (
     }
 }
 
-exports.updateBooking = async (booking_id, user_id, court_id, booking_date, start_time, end_time, total_price, status) => {
+exports.updateBooking = async (booking_id, user_id, court_id, booking_date, start_time, end_time, total_price, status, status_id) => {
     try {
         const query = booking.updateBooking
-        const result = await db.query(query, [user_id, court_id, booking_date, start_time, end_time, total_price, status, booking_id])
+        const result = await db.query(query, [user_id, court_id, booking_date, start_time, end_time, total_price, status, status_id, booking_id])
         return {
             status: true,
             data: result.rows[0]

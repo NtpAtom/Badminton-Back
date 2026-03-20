@@ -1,0 +1,5 @@
+{
+    "getAllStatuses": "SELECT * FROM status ORDER BY status_name ASC",
+    "getStatusById": "SELECT * FROM status WHERE id_status = $1",
+    "getStatusByName": "SELECT * FROM status WHERE status_name = $1"
+}
