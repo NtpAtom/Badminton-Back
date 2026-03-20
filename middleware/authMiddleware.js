@@ -32,7 +32,7 @@ exports.authorizeRole = (...allowedRoles) => {
             })
         }
 
-        const userRole = req.user.role.toLowerCase()
+        const userRole = req.user.user_role.toLowerCase()
         const roles = allowedRoles.map(r => r.toLowerCase())
 
         if (!roles.includes(userRole)) {
