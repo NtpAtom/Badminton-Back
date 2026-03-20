@@ -1,0 +1,7 @@
+{
+    "getBooking": "SELECT * FROM booking ORDER BY created_at DESC",
+    "getBookingById": "SELECT * FROM booking WHERE booking_id = $1",
+    "addBooking": "INSERT INTO booking (user_id, court_id, booking_date, start_time, end_time, total_price, status, status_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *",
+    "updateBooking": "UPDATE booking SET user_id = $1, court_id = $2, booking_date = $3, start_time = $4, end_time = $5, total_price = $6, status = $7, status_id = $8, updated_at = CURRENT_TIMESTAMP WHERE booking_id = $9 RETURNING *",
+    "deleteBooking": "DELETE FROM booking WHERE booking_id = $1 RETURNING *"
+}
