@@ -1,11 +1,12 @@
 const express = require("express")
 const bookingController = require("../controller/bookingController")
 const router = express.Router()
+const { authenticateToken, authorizeRole } = require("../middleware/authMiddleware")
 
-router.get("/", bookingController.getBooking)
-router.get("/:booking_id", bookingController.getBookingById)
-router.post("/add", bookingController.addBooking)
-router.put("/update/:booking_id", bookingController.updateBooking)
-router.delete("/delete/:booking_id", bookingController.deleteBooking)
+router.get("/", authenticateToken, bookingController.getBooking)
+router.get("/:booking_id", authenticateToken, bookingController.getBookingById)
+router.post("/add", authenticateToken, bookingController.addBooking)
+router.put("/update/:booking_id", authenticateToken, bookingController.updateBooking)
+router.delete("/delete/:booking_id", authenticateToken, authorizeRole("admin"), bookingController.deleteBooking)
 
 module.exports = router

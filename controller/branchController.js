@@ -32,7 +32,8 @@ exports.getBranchById = async (req, res) => {
 exports.addBranch = async (req, res) => {
     try {
         const { branch_name, branch_address, open_time, close_time, is_active } = req.body;
-        const result = await branchService.addBranch(branch_name, branch_address, open_time, close_time, is_active); res.json(result)
+        const result = await branchService.addBranch(branch_name, branch_address, open_time, close_time, is_active);
+        res.json(result)
     } catch (error) {
         console.error("ERROR:", error)
         res.status(500).json({
