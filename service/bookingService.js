@@ -100,7 +100,7 @@ exports.addBooking = async (
 
 
         const query = booking.addBooking
-        const result = await client.query(query, [user_id, court_id, booking_date, start_time, end_time, calculated_total_price, finalStatus, finalStatusId])
+        const result = await client.query(query, [user_id, court_id, booking_date, start_time, end_time, calculated_total_price, Status, StatusId])
 
         const newBooking = result.rows[0];
 

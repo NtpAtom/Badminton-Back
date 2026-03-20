@@ -25,13 +25,13 @@ exports.authenticateToken = (req, res, next) => {
 
 exports.authorizeRole = (...allowedRoles) => {
     return (req, res, next) => {
-        if (!req.user || !req.user.role) {
+        if (!req.user || !req.user.user_role) {
             return res.status(403).json({
                 status: false,
                 message: "Access denied: role not found"
             })
         }
-        
+
         const userRole = req.user.role.toLowerCase()
         const roles = allowedRoles.map(r => r.toLowerCase())
 

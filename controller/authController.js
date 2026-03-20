@@ -21,7 +21,7 @@ exports.login = async (req, res) => {
     try {
         const { user_email, user_password } = req.body
         const user = await authService.login(user_email, user_password)
-        const token = jwt.sign({ user_id: user.data.user_id, role: user.data.user_role },
+        const token = jwt.sign({ user_id: user.data.user_id, user_role: user.data.user_role },
             process.env.JWT_SECRET,
             { expiresIn: "1h" })
         res.json({
