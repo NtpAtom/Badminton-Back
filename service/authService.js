@@ -21,10 +21,7 @@ exports.register = async (user_name, user_email, user_password, user_phone, bran
         const query = (users.addUser)
         const result = await db.query(query, [user_name, user_email, hashed, user_phone, userRole, branchUser, isActive])
 
-        return {
-            status: true,
-            data: result.rows[0]
-        }
+        return result.rows[0]
     } catch (error) {
         console.log(error)
         if (error.code === '23505') {
@@ -50,16 +47,13 @@ exports.login = async (user_email, user_password) => {
             throw new Error("password is not match")
         }
         return {
-            status: true,
-            data: {
-                user_id: user.user_id,
-                user_name: user.user_name,
-                user_email: user.user_email,
-                user_phone: user.user_phone,
-                user_role: user.user_role,
-                branch_id: user.branch_id,
-                is_active: user.is_active
-            }
+            user_id: user.user_id,
+            user_name: user.user_name,
+            user_email: user.user_email,
+            user_phone: user.user_phone,
+            user_role: user.user_role,
+            branch_id: user.branch_id,
+            is_active: user.is_active
         }
 
 

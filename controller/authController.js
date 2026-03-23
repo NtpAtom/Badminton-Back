@@ -5,7 +5,10 @@ exports.register = async (req, res) => {
     try {
         const { user_name, user_email, user_password, user_phone, user_role, branch_id, is_active } = req.body
         const result = await authService.register(user_name, user_email, user_password, user_phone, user_role, branch_id, is_active)
-        res.json(result)
+        res.json({
+            status: true,
+            user: result
+        })
 
     } catch (error) {
         console.error("ERROR:", error)
@@ -21,12 +24,12 @@ exports.login = async (req, res) => {
     try {
         const { user_email, user_password } = req.body
         const user = await authService.login(user_email, user_password)
-        const token = jwt.sign({ user_id: user.data.user_id, user_role: user.data.user_role },
+        const token = jwt.sign({ user_id: user.user_id, user_role: user.user_role },
             process.env.JWT_SECRET,
             { expiresIn: "1h" })
         res.json({
             status: true,
-            data: user,
+            user: user,
             token: token
         })
     } catch (error) {
