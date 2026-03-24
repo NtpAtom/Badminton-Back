@@ -14,7 +14,7 @@ exports.register = async (user_name, user_email, user_password, user_phone, bran
 
         // 🔹 ถ้าเป็น User ทั่วไป branch_id จะเป็น null (แก้ปัญหา Error: invalid input syntax for type uuid: "")
         const branchUser = (branch_id === "" || !branch_id) ? null : branch_id
-        const userRole = "User"
+        const userRole = "user"
         const isActive = true
 
 
