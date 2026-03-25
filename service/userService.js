@@ -1,4 +1,5 @@
 const db = require("../DB/db")
+const bcrypt = require("bcrypt")
 const user = require("../json/user.json")
 
 exports.getUser = async () => {
@@ -43,9 +44,31 @@ exports.addUser = async (user_name, user_email, user_password, user_phone, user_
     }
 }
 
-exports.updateUser = async (user_id, user_name, user_email, user_password, user_phone, user_role, branch_id, is_active) => {
+exports.updateUser = async (user_id, user_name, user_email, user_password, user_phone, user_role, branch_id, is_active, old_password) => {
     try {
-        const result = await db.query(user.updateUser, [user_name, user_email, user_password, user_phone, user_role, branch_id, is_active, user_id])
+        let passwordToSave = user_password;
+
+        // ถ้ามีการส่งรหัสผ่านใหม่มา (user_password จะไม่ใช่ null)
+        if (user_password) {
+            // 1. ดึงข้อมูลผู้ใช้ปัจจุบันมาเช็ครหัสผ่านเดิม
+            const currentUserRes = await db.query(user.selectUserById, [user_id]);
+            const currentUser = currentUserRes.rows[0];
+
+            if (!old_password) {
+                throw new Error("กรุณากรอกรหัสผ่านเดิมเพื่อยืนยันการเปลี่ยน");
+            }
+
+            // 2. เช็คว่ารหัสผ่านเดิมถูกไหม
+            const isMatch = await bcrypt.compare(old_password, currentUser.user_password);
+            if (!isMatch) {
+                throw new Error("รหัสผ่านเดิมไม่ถูกต้อง");
+            }
+
+            // 3. เข้ารหัสรหัสผ่านใหม่ก่อนบันทึก
+            passwordToSave = await bcrypt.hash(user_password, 10);
+        }
+
+        const result = await db.query(user.updateUser, [user_name, user_email, passwordToSave, user_phone, user_role, branch_id, is_active, user_id])
         return {
             status: true,
             data: result.rows[0]
@@ -55,7 +78,7 @@ exports.updateUser = async (user_id, user_name, user_email, user_password, user_
         if (error.code === '23505') {
             throw new Error(`Email already registered`)
         }
-        throw new Error(`updateUser failed: ${error.message}`)
+        throw new Error(error.message)
     }
 }
 

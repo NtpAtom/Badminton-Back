@@ -47,8 +47,8 @@ exports.addUser = async (req, res) => {
 
 exports.updateUser = async (req, res) => {
     try {
-        const { user_name, user_email, user_password, user_phone, user_role, branch_id, is_active } = req.body
-        const result = await userService.updateUser(req.params.user_id, user_name, user_email, user_password, user_phone, user_role, branch_id, is_active)
+        const { user_name, user_email, user_password, user_phone, user_role, branch_id, is_active, old_password } = req.body
+        const result = await userService.updateUser(req.params.user_id, user_name, user_email, user_password, user_phone, user_role, branch_id, is_active, old_password)
         res.json(result)
     } catch (error) {
         console.error("ERROR:", error)
