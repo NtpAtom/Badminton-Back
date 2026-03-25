@@ -76,3 +76,18 @@ exports.deleteCourt = async (req, res) => {
         })
     }
 }
+
+exports.getAvailableCourts = async (req, res) => {
+    try {
+        const { branch_id, booking_date, start_time, end_time } = req.query
+        const result = await courtService.getAvailableCourts(branch_id, booking_date, start_time, end_time)
+        res.json(result)
+    } catch (error) {
+        console.error("ERROR:", error)
+        res.status(500).json({
+            status: false,
+            message: error.message,
+            code: error.code,
+        })
+    }
+}

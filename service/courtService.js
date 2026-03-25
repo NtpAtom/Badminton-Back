@@ -67,4 +67,17 @@ exports.deleteCourt = async (court_id) => {
     }
 }
 
+exports.getAvailableCourts = async (branch_id, booking_date, start_time, end_time) => {
+    try {
+        const result = await db.query(court.getAvailableCourts, [branch_id, booking_date, start_time, end_time])
+        return {
+            status: true,
+            data: result.rows
+        }
+    } catch (error) {
+        console.log(error)
+        throw new Error(`getAvailableCourts failed: ${error.message}`)
+    }
+}
+
 
