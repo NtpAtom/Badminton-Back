@@ -2,7 +2,9 @@ const bookingService = require("../service/bookingService")
 
 exports.getBooking = async (req, res) => {
     try {
-        const result = await bookingService.getBooking()
+        const user_id = req.user.user_id
+        const { startDate, endDate, page = 1, pageSize = 10 } = req.query;
+        const result = await bookingService.getBookingByUserId(user_id, startDate, endDate, parseInt(page), parseInt(pageSize))
         res.json(result)
     } catch (error) {
         console.error("ERROR:", error)

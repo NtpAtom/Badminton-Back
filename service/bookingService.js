@@ -16,6 +16,56 @@ exports.getBooking = async () => {
     }
 }
 
+exports.getBookingByUserId = async (user_id, startDate, endDate, page = 1, pageSize = 10) => {
+    try {
+        const offset = (page - 1) * pageSize;
+        let query = `
+            SELECT b.*, c.court_name, br.branch_name, 
+            ROUND(EXTRACT(EPOCH FROM (b.end_time::time - b.start_time::time)) / 3600, 2) as duration_hours 
+            FROM booking b 
+            JOIN court c ON b.court_id = c.court_id 
+            JOIN branch br ON c.branch_id = br.branch_id 
+            WHERE b.user_id = $1
+        `;
+        let countQuery = `SELECT COUNT(*) FROM booking b WHERE b.user_id = $1`;
+        const params = [user_id];
+        let paramIndex = 2;
+
+        if (startDate && endDate) {
+            query += ` AND b.booking_date BETWEEN $${paramIndex} AND $${paramIndex + 1}`;
+            countQuery += ` AND b.booking_date BETWEEN $${paramIndex} AND $${paramIndex + 1}`;
+            params.push(startDate, endDate);
+            paramIndex += 2;
+        } else if (startDate) {
+            query += ` AND b.booking_date >= $${paramIndex}`;
+            countQuery += ` AND b.booking_date >= $${paramIndex}`;
+            params.push(startDate);
+            paramIndex++;
+        } else if (endDate) {
+            query += ` AND b.booking_date <= $${paramIndex}`;
+            countQuery += ` AND b.booking_date <= $${paramIndex}`;
+            params.push(endDate);
+            paramIndex++;
+        }
+
+        query += ` ORDER BY b.booking_date DESC, b.start_time DESC LIMIT $${paramIndex} OFFSET $${paramIndex + 1}`;
+        const finalParams = [...params, pageSize, offset];
+
+        const result = await db.query(query, finalParams);
+        const countResult = await db.query(countQuery, params);
+
+        return {
+            status: true,
+            data: result.rows,
+            total: parseInt(countResult.rows[0].count),
+            pageCount: Math.ceil(parseInt(countResult.rows[0].count) / pageSize)
+        }
+    } catch (error) {
+        console.error(error)
+        throw new Error(`GetBookingByUserId failed: ${error.message}`)
+    }
+}
+
 exports.getBookingById = async (booking_id) => {
     try {
         const query = booking.getBookingById
