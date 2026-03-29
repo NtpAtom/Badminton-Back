@@ -1,8 +1,9 @@
 {
     "getBooking": "SELECT * FROM booking ORDER BY created_at DESC",
-    "getBookingByUserId": "SELECT b.*, c.court_name, br.branch_name, ROUND(EXTRACT(EPOCH FROM (b.end_time::time - b.start_time::time)) / 3600, 2) as duration_hours FROM booking b JOIN court c ON b.court_id = c.court_id JOIN branch br ON c.branch_id = br.branch_id WHERE b.user_id = $1 ORDER BY b.created_at DESC",
+    "getAllBookingsByBranchAndDate": "SELECT b.*, u.user_name as user FROM booking b JOIN users u ON b.user_id = u.user_id JOIN court c ON b.court_id = c.court_id WHERE c.branch_id = $1 AND b.booking_date = $2 AND (b.remake IS NULL OR b.remake != 'Cancelled') ORDER BY b.start_time ASC",
+    "getBookingByUserId": "SELECT b.*, c.court_name, br.branch_name, ROUND(EXTRACT(EPOCH FROM (b.end_time::time - b.start_time::time)) / 3600, 2) as duration_hours FROM booking b JOIN court c ON b.court_id = c.court_id JOIN branch br ON c.branch_id = br.branch_id WHERE b.user_id = $1 AND (b.remake IS NULL OR b.remake != 'Cancelled') ORDER BY b.created_at DESC",
     "getBookingById": "SELECT * FROM booking WHERE booking_id = $1",
     "addBooking": "INSERT INTO booking (user_id, court_id, booking_date, start_time, end_time, total_price, status, status_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *",
     "updateBooking": "UPDATE booking SET user_id = $1, court_id = $2, booking_date = $3, start_time = $4, end_time = $5, total_price = $6, status = $7, status_id = $8, updated_at = CURRENT_TIMESTAMP WHERE booking_id = $9 RETURNING *",
-    "deleteBooking": "DELETE FROM booking WHERE booking_id = $1 RETURNING *"
+    "deleteBooking": "UPDATE booking SET remake = 'Cancelled', updated_at = CURRENT_TIMESTAMP WHERE booking_id = $1 RETURNING *"
 }

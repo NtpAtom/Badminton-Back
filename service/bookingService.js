@@ -135,12 +135,13 @@ exports.addBooking = async (
         const price_per_hour = parseFloat(courtRes.rows[0].price_per_hour)
         const calculated_total_price = diffHours * price_per_hour
 
-        // 🔍 เช็คเวลาชน
+        // 🔍 เช็คเวลาชน (ข้ามรายการที่ยกเลิกแล้ว)
         const conflict = await client.query(
             `SELECT 1 FROM booking
              WHERE court_id = $1
              AND booking_date = $2
-             AND (start_time < $4 AND end_time > $3)`,
+             AND (start_time < $4 AND end_time > $3)
+             AND (remake IS NULL OR remake != 'Cancelled')`,
             [court_id, booking_date, start_time, end_time]
         )
 
@@ -198,5 +199,19 @@ exports.deleteBooking = async (booking_id) => {
     } catch (error) {
         console.error(error)
         throw new Error(`DeleteBooking failed: ${error.message}`)
+    }
+}
+
+exports.getAllBookingsByBranchAndDate = async (branch_id, booking_date) => {
+    try {
+        const query = booking.getAllBookingsByBranchAndDate
+        const result = await db.query(query, [branch_id, booking_date])
+        return {
+            status: true,
+            data: result.rows
+        }
+    } catch (error) {
+        console.error(error)
+        throw new Error(`GetAllBookingsByBranchAndDate failed: ${error.message}`)
     }
 }

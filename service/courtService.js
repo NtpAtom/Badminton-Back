@@ -1,9 +1,13 @@
 const db = require("../DB/db")
 const court = require("../json/court.json")
 
-exports.getCourt = async () => {
+exports.getCourt = async (branch_id) => {
     try {
-        const result = await db.query(court.getCourt)
+        // เลือกคำสั่ง SQL: ถ้ามี branch_id ให้ใช้คำสั่งดึงตามสาขา ถ้าไม่มีให้ดึงทั้งหมด
+        const query = branch_id ? court.getCourtByBranch : court.getCourt
+        // กำหนดพารามิเตอร์: ถ้ามี branch_id ให้ส่งค่าเข้าไปใน array ถ้าไม่มีให้เป็น array ว่าง
+        const params = branch_id ? [branch_id] : []
+        const result = await db.query(query, params)
         return {
             status: true,
             data: result.rows

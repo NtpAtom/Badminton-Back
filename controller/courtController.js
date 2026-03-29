@@ -2,7 +2,14 @@ const courtService = require("../service/courtService")
 
 exports.getCourt = async (req, res) => {
     try {
-        const result = await courtService.getCourt()
+        let branch_id = req.query.branch_id
+        
+        // Enforce branch_id for admins
+        if (req.user && req.user.user_role === 'admin') {
+            branch_id = req.user.branch_id
+        }
+
+        const result = await courtService.getCourt(branch_id)
         res.json(result)
 
     } catch (error) {

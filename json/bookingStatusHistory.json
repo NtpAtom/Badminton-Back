@@ -3,5 +3,6 @@
     "getBookingStatusHistoryById": "SELECT * FROM booking_status_history WHERE bsh_id = $1",
     "getBookingStatusHistoryByBookingId": "SELECT * FROM booking_status_history WHERE booking_id = $1 ORDER BY changed_at DESC",
     "addBookingStatusHistory": "INSERT INTO booking_status_history (booking_id, old_status, new_status, changed_by, status_old_id, status_new_id) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *",
-    "deleteBookingStatusHistory": "DELETE FROM booking_status_history WHERE bsh_id = $1 RETURNING *"
+    "deleteBookingStatusHistory": "DELETE FROM booking_status_history WHERE bsh_id = $1 RETURNING *",
+    "deleteBookingStatusHistoryByBookingId": "DELETE FROM booking_status_history WHERE booking_id = $1 RETURNING *"
 }
