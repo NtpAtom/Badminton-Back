@@ -2,17 +2,16 @@ const userService = require("../service/userService")
 
 exports.getUser = async (req, res) => {
     try {
-        const result = await userService.getUser()
-        res.json(result)
-
+        const { page = 1, pageSize = 10, search = '' } = req.query;
+        const result = await userService.getUser(search, parseInt(page), parseInt(pageSize), req.user.user_role);
+        res.json(result);
     } catch (error) {
-        console.error("ERROR:", error)
+        console.error("ERROR:", error);
         res.status(500).json({
             status: false,
             message: error.message,
             code: error.code,
-        })
-
+        });
     }
 }
 

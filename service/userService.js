@@ -2,16 +2,22 @@ const db = require("../DB/db")
 const bcrypt = require("bcrypt")
 const user = require("../json/user.json")
 
-exports.getUser = async () => {
+exports.getUser = async (search = '', page = 1, pageSize = 10, requesterRole = '') => {
     try {
-        const result = await db.query(user.selectUser)
+        const offset = (page - 1) * pageSize;
+        const searchQuery = `%${search}%`;
+        const result = await db.query(user.selectUser, [searchQuery, pageSize, offset, requesterRole]);
+        
+        const totalRows = result.rows.length > 0 ? parseInt(result.rows[0].total_count) : 0;
+        
         return {
             status: true,
-            data: result.rows
-        }
+            data: result.rows,
+            total: totalRows
+        };
     } catch (error) {
-        console.log(error)
-        throw new Error(`GetUser failed: ${error.message}`)
+        console.log(error);
+        throw new Error(`GetUser failed: ${error.message}`);
     }
 }
 
