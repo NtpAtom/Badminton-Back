@@ -33,6 +33,12 @@ exports.authorizeRole = (...allowedRoles) => {
         }
 
         const userRole = req.user.user_role.toLowerCase()
+        
+        // Super admin always has access to everything
+        if (userRole.includes('super')) {
+            return next()
+        }
+
         const roles = allowedRoles.map(r => r.toLowerCase())
 
         if (!roles.includes(userRole)) {
