@@ -5,6 +5,7 @@ const { authenticateToken, authorizeRole } = require("../middleware/authMiddlewa
 
 router.get("/", authenticateToken, bookingController.getBooking)
 router.get("/all", authenticateToken, authorizeRole("admin", "super"), bookingController.getAllBookingsByBranchAndDate)
+router.get("/admin/history", authenticateToken, authorizeRole("admin", "super"), bookingController.getAllBookingsAdmin)
 router.get("/:booking_id", authenticateToken, bookingController.getBookingById)
 router.post("/add", authenticateToken, bookingController.addBooking)
 router.put("/update/:booking_id", authenticateToken, bookingController.updateBooking)

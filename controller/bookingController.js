@@ -118,3 +118,31 @@ exports.getAllBookingsByBranchAndDate = async (req, res) => {
         })
     }
 }
+
+exports.getAllBookingsAdmin = async (req, res) => {
+    try {
+        const { user_name, branch_id, startDate, endDate, page = 1, pageSize = 10 } = req.query;
+        let finalBranchId = branch_id;
+
+        // Enforce branch_id for admins
+        if (req.user && req.user.user_role === 'admin') {
+            finalBranchId = req.user.branch_id;
+        }
+
+        const result = await bookingService.getAllBookingsAdmin(
+            user_name,
+            finalBranchId,
+            startDate,
+            endDate,
+            parseInt(page),
+            parseInt(pageSize)
+        );
+        res.json(result);
+    } catch (error) {
+        console.error("ERROR:", error);
+        res.status(500).json({
+            status: false,
+            message: error.message
+        });
+    }
+}

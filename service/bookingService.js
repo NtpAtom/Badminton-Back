@@ -215,3 +215,74 @@ exports.getAllBookingsByBranchAndDate = async (branch_id, booking_date) => {
         throw new Error(`GetAllBookingsByBranchAndDate failed: ${error.message}`)
     }
 }
+
+exports.getAllBookingsAdmin = async (userName, branchId, startDate, endDate, page = 1, pageSize = 10) => {
+    try {
+        const offset = (page - 1) * pageSize;
+        let query = `
+            SELECT b.*, c.court_name, br.branch_name, u.user_name,
+            ROUND(EXTRACT(EPOCH FROM (b.end_time::time - b.start_time::time)) / 3600, 2) as duration_hours 
+            FROM booking b 
+            JOIN court c ON b.court_id = c.court_id 
+            JOIN branch br ON c.branch_id = br.branch_id 
+            JOIN users u ON b.user_id = u.user_id
+            WHERE 1=1
+        `;
+        let countQuery = `
+            SELECT COUNT(*) 
+            FROM booking b 
+            JOIN users u ON b.user_id = u.user_id
+            JOIN court c ON b.court_id = c.court_id
+            WHERE b.user_id = u.user_id AND b.court_id = c.court_id
+        `;
+        const params = [];
+        let paramIndex = 1;
+
+        if (userName) {
+            query += ` AND u.user_name ILIKE $${paramIndex}`;
+            countQuery += ` AND u.user_name ILIKE $${paramIndex}`;
+            params.push(`%${userName}%`);
+            paramIndex++;
+        }
+
+        if (branchId) {
+            query += ` AND c.branch_id = $${paramIndex}`;
+            countQuery += ` AND c.branch_id = $${paramIndex}`;
+            params.push(branchId);
+            paramIndex++;
+        }
+
+        if (startDate && endDate) {
+            query += ` AND b.booking_date BETWEEN $${paramIndex} AND $${paramIndex + 1}`;
+            countQuery += ` AND b.booking_date BETWEEN $${paramIndex} AND $${paramIndex + 1}`;
+            params.push(startDate, endDate);
+            paramIndex += 2;
+        } else if (startDate) {
+            query += ` AND b.booking_date >= $${paramIndex}`;
+            countQuery += ` AND b.booking_date >= $${paramIndex}`;
+            params.push(startDate);
+            paramIndex++;
+        } else if (endDate) {
+            query += ` AND b.booking_date <= $${paramIndex}`;
+            countQuery += ` AND b.booking_date <= $${paramIndex}`;
+            params.push(endDate);
+            paramIndex++;
+        }
+
+        query += ` ORDER BY b.booking_date DESC, b.start_time DESC LIMIT $${paramIndex} OFFSET $${paramIndex + 1}`;
+        const finalParams = [...params, pageSize, offset];
+
+        const result = await db.query(query, finalParams);
+        const countResult = await db.query(countQuery, params);
+
+        return {
+            status: true,
+            data: result.rows,
+            total: parseInt(countResult.rows[0].count),
+            pageCount: Math.ceil(parseInt(countResult.rows[0].count) / pageSize)
+        }
+    } catch (error) {
+        console.error(error)
+        throw new Error(`GetAllBookingsAdmin failed: ${error.message}`)
+    }
+}
