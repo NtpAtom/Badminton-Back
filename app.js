@@ -11,9 +11,11 @@ const branchRoute = require("./routes/branchRoute")
 const courtRoute = require("./routes/courtRoute")
 const bookingRoute = require("./routes/bookingRoute")
 const bookingStatusHistoryRoute = require("./routes/bookingStatusHistoryRoute")
+const stripeRoute = require("./routes/stripeRoute")
 
-
-
+// ⚠️ Stripe Webhook ต้องมาก่อน express.json() เพราะต้องการ raw body
+const stripeWebhook = require("./webHook/stripeWebhook")
+app.use("/webhook/stripe", stripeWebhook)
 
 app.use(cors())
 app.use(express.json());
@@ -25,9 +27,7 @@ app.use("/api/user", userRoute)
 app.use("/api/court", courtRoute)
 app.use("/api/booking", bookingRoute)
 app.use("/api/booking-status-history", bookingStatusHistoryRoute)
-
-
-
+app.use("/api/stripe", stripeRoute)
 
 
 

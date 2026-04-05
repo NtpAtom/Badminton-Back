@@ -48,7 +48,7 @@ exports.getBookingByUserId = async (user_id, startDate, endDate, page = 1, pageS
             paramIndex++;
         }
 
-        query += ` ORDER BY b.booking_date DESC, b.start_time DESC LIMIT $${paramIndex} OFFSET $${paramIndex + 1}`;
+        query += ` ORDER BY b.created_at DESC LIMIT $${paramIndex} OFFSET $${paramIndex + 1}`;
         const finalParams = [...params, pageSize, offset];
 
         const result = await db.query(query, finalParams);
@@ -137,10 +137,11 @@ exports.addBooking = async (
 
         // 🔍 เช็คเวลาชน (ข้ามรายการที่ยกเลิกแล้ว)
         const conflict = await client.query(
-            `SELECT 1 FROM booking
-             WHERE court_id = $1
-             AND booking_date = $2
-             AND (start_time < $4 AND end_time > $3)
+            `SELECT 1 FROM booking 
+             WHERE court_id = $1 
+             AND booking_date = $2 
+             AND (start_time < $4 AND end_time > $3) 
+             AND status != 'Cancelled'
              AND (remake IS NULL OR remake != 'Cancelled')`,
             [court_id, booking_date, start_time, end_time]
         )
@@ -216,6 +217,97 @@ exports.getAllBookingsByBranchAndDate = async (branch_id, booking_date) => {
     }
 }
 
+// ✅ UUID สถานะ
+const STATUS_CONFIRMED = { name: 'Confirmed', id: '20b7dc9e-9466-4757-b853-8d2cfb8ce4a3' }
+const STATUS_CANCELLED = { name: 'Cancelled', id: 'abc926b7-930e-4f45-b043-c5a606bf83c4' }
+const STATUS_PENDING = { name: 'Pending', id: 'ed5cf29e-f83e-4ab1-9c21-44c56f550c12' }
+
+/**
+ * ยืนยันการจอง (จ่ายเงินสำเร็จ) — เรียกจาก Stripe Webhook
+ */
+exports.confirmBooking = async (booking_id) => {
+    const client = await db.connect()
+    try {
+        await client.query("BEGIN")
+
+        // ดึง booking ปัจจุบัน
+        const bookingRes = await client.query("SELECT * FROM booking WHERE booking_id = $1", [booking_id])
+        if (bookingRes.rows.length === 0) throw new Error("Booking not found")
+        const booking = bookingRes.rows[0]
+
+        const oldStatus = booking.status
+        const oldStatusId = booking.status_id
+
+        // อัปเดตสถานะ
+        await client.query(
+            `UPDATE booking SET status = $1, status_id = $2, updated_at = CURRENT_TIMESTAMP WHERE booking_id = $3`,
+            [STATUS_CONFIRMED.name, STATUS_CONFIRMED.id, booking_id]
+        )
+
+        // บันทึก history
+        const historyQuery = bookingStatusHistory.addBookingStatusHistory
+        await client.query(historyQuery, [
+            booking_id,
+            oldStatus,           // ชื่อสถานะเก่า (text)
+            STATUS_CONFIRMED.name,
+            booking.user_id,
+            oldStatusId,         // UUID สถานะเก่า
+            STATUS_CONFIRMED.id
+        ])
+
+        await client.query("COMMIT")
+        return { status: true, message: "Booking confirmed" }
+    } catch (error) {
+        await client.query("ROLLBACK")
+        throw new Error(`ConfirmBooking failed: ${error.message}`)
+    } finally {
+        client.release()
+    }
+}
+
+/**
+ * ยกเลิกการจอง (กดยกเลิก หรือหมดเวลา 3 นาที)
+ */
+exports.cancelBooking = async (booking_id, user_id) => {
+    const client = await db.connect()
+    try {
+        await client.query("BEGIN")
+
+        // ดึง booking ปัจจุบัน
+        const bookingRes = await client.query("SELECT * FROM booking WHERE booking_id = $1", [booking_id])
+        if (bookingRes.rows.length === 0) throw new Error("Booking not found")
+        const booking = bookingRes.rows[0]
+
+        const oldStatus = booking.status
+        const oldStatusId = booking.status_id
+
+        // อัปเดตสถานะ (ไม่ใส่ remake = 'Cancelled' ตามที่ user ขอ)
+        await client.query(
+            `UPDATE booking SET status = $1, status_id = $2, updated_at = CURRENT_TIMESTAMP WHERE booking_id = $3`,
+            [STATUS_CANCELLED.name, STATUS_CANCELLED.id, booking_id]
+        )
+
+        // บันทึก history
+        const historyQuery = bookingStatusHistory.addBookingStatusHistory
+        await client.query(historyQuery, [
+            booking_id,
+            oldStatus,           // ชื่อสถานะเก่า (text)
+            STATUS_CANCELLED.name,
+            user_id || booking.user_id,
+            oldStatusId,         // UUID สถานะเก่า
+            STATUS_CANCELLED.id
+        ])
+
+        await client.query("COMMIT")
+        return { status: true, message: "Booking cancelled" }
+    } catch (error) {
+        await client.query("ROLLBACK")
+        throw new Error(`CancelBooking failed: ${error.message}`)
+    } finally {
+        client.release()
+    }
+}
+
 exports.getAllBookingsAdmin = async (userName, branchId, startDate, endDate, page = 1, pageSize = 10) => {
     try {
         const offset = (page - 1) * pageSize;
@@ -269,7 +361,7 @@ exports.getAllBookingsAdmin = async (userName, branchId, startDate, endDate, pag
             paramIndex++;
         }
 
-        query += ` ORDER BY b.booking_date DESC, b.start_time DESC LIMIT $${paramIndex} OFFSET $${paramIndex + 1}`;
+        query += ` ORDER BY b.created_at DESC LIMIT $${paramIndex} OFFSET $${paramIndex + 1}`;
         const finalParams = [...params, pageSize, offset];
 
         const result = await db.query(query, finalParams);

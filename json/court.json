@@ -5,5 +5,5 @@
     "addCourt": "INSERT INTO court (court_name,price_per_hour,status,branch_id) VALUES ($1, $2, $3, $4) RETURNING *",
     "updateCourt": "UPDATE court SET court_name = $1, price_per_hour = $2, status = $3, branch_id = $4 WHERE court_id = $5 RETURNING *",
     "deleteCourt": "DELETE FROM court WHERE court_id = $1 RETURNING *",
-    "getAvailableCourts": "SELECT c.* FROM court c WHERE c.branch_id = $1 AND c.status = 'available' AND c.court_id NOT IN (SELECT b.court_id FROM booking b WHERE b.booking_date = $2 AND NOT ($3 >= b.end_time OR $4 <= b.start_time))"
+    "getAvailableCourts": "SELECT c.* FROM court c WHERE c.branch_id = $1 AND c.status = 'available' AND c.court_id NOT IN (SELECT b.court_id FROM booking b WHERE b.booking_date = $2 AND NOT ($3 >= b.end_time OR $4 <= b.start_time) AND b.status != 'Cancelled' AND (b.remake IS NULL OR b.remake != 'Cancelled'))"
 }
