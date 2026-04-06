@@ -217,8 +217,8 @@ exports.getAllBookingsByBranchAndDate = async (branch_id, booking_date) => {
     }
 }
 
-// ✅ UUID สถานะ
-const STATUS_CONFIRMED = { name: 'Confirmed', id: '20b7dc9e-9466-4757-b853-8d2cfb8ce4a3' }
+// ✅ UUID สถานะ (ตรงตาม DB)
+const STATUS_COMPLETED = { name: 'Completed', id: '20b7dc9e-9466-4757-b853-8d2cfb8ce4a3' }
 const STATUS_CANCELLED = { name: 'Cancelled', id: 'abc926b7-930e-4f45-b043-c5a606bf83c4' }
 const STATUS_PENDING = { name: 'Pending', id: 'ed5cf29e-f83e-4ab1-9c21-44c56f550c12' }
 
@@ -241,7 +241,7 @@ exports.confirmBooking = async (booking_id) => {
         // อัปเดตสถานะ
         await client.query(
             `UPDATE booking SET status = $1, status_id = $2, updated_at = CURRENT_TIMESTAMP WHERE booking_id = $3`,
-            [STATUS_CONFIRMED.name, STATUS_CONFIRMED.id, booking_id]
+            [STATUS_COMPLETED.name, STATUS_COMPLETED.id, booking_id]
         )
 
         // บันทึก history
@@ -249,10 +249,10 @@ exports.confirmBooking = async (booking_id) => {
         await client.query(historyQuery, [
             booking_id,
             oldStatus,           // ชื่อสถานะเก่า (text)
-            STATUS_CONFIRMED.name,
+            STATUS_COMPLETED.name,
             booking.user_id,
             oldStatusId,         // UUID สถานะเก่า
-            STATUS_CONFIRMED.id
+            STATUS_COMPLETED.id
         ])
 
         await client.query("COMMIT")

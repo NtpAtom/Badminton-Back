@@ -44,6 +44,37 @@ exports.createPaymentIntent = async (req, res) => {
 };
 
 /**
+ * POST /api/stripe/confirm-booking
+ * ยืนยัน booking หลังจ่ายเงินสำเร็จจาก Frontend โดยตรง
+ */
+exports.confirmBooking = async (req, res) => {
+    try {
+        const { booking_id } = req.body;
+        const user_id = req.user.user_id;
+
+        if (!booking_id) {
+            return res.status(400).json({ status: false, message: "booking_id is required" });
+        }
+
+        // ตรวจสอบว่า booking เป็นของ user นี้จริง
+        const bookingRes = await bookingService.getBookingById(booking_id);
+        if (!bookingRes.status || bookingRes.data.length === 0) {
+            return res.status(404).json({ status: false, message: "Booking not found" });
+        }
+        const booking = bookingRes.data[0];
+        if (booking.user_id !== user_id) {
+            return res.status(403).json({ status: false, message: "Access denied" });
+        }
+
+        const result = await bookingService.confirmBooking(booking_id);
+        return res.json(result);
+    } catch (error) {
+        console.error("confirmBooking ERROR:", error);
+        return res.status(500).json({ status: false, message: error.message });
+    }
+};
+
+/**
  * POST /api/stripe/cancel-booking
  * ยกเลิก booking (กดยกเลิก หรือหมดเวลา 3 นาที)
  */
