@@ -72,3 +72,18 @@ exports.deleteUser = async (req, res) => {
         })
     }
 }
+
+exports.updateUserRole = async (req, res) => {
+    try {
+        const { user_role, is_active } = req.body
+        const result = await userService.updateUserRole(req.params.user_id, user_role, is_active)
+        res.json(result)
+    } catch (error) {
+        console.error("ERROR:", error)
+        res.status(500).json({
+            status: false,
+            message: error.message,
+            code: error.code,
+        })
+    }
+}

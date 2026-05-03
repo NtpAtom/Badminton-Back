@@ -7,9 +7,9 @@ exports.getUser = async (search = '', page = 1, pageSize = 10, requesterRole = '
         const offset = (page - 1) * pageSize;
         const searchQuery = `%${search}%`;
         const result = await db.query(user.selectUser, [searchQuery, pageSize, offset, requesterRole]);
-        
+
         const totalRows = result.rows.length > 0 ? parseInt(result.rows[0].total_count) : 0;
-        
+
         return {
             status: true,
             data: result.rows,
@@ -101,4 +101,18 @@ exports.deleteUser = async (user_id) => {
     }
 }
 
-
+exports.updateUserRole = async (user_id, user_role, is_active) => {
+    try {
+        const result = await db.query(
+            "UPDATE users SET user_role = COALESCE($1, user_role), is_active = COALESCE($2, is_active) WHERE user_id = $3 RETURNING *",
+            [user_role, is_active, user_id]
+        )
+        return {
+            status: true,
+            data: result.rows[0]
+        }
+    } catch (error) {
+        console.log(error)
+        throw new Error(`updateUserRole failed: ${error.message}`)
+    }
+}
